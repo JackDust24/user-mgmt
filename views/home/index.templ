@@ -1,0 +1,29 @@
+package home
+
+import (
+	"user-mgmt/views/layouts"
+)
+
+// Main home page for unauthenticated users
+templ Index() {
+	@layouts.Base() {
+		<div class="uk-flex uk-flex-center uk-flex-middle uk-margin-xlarge-top">
+			<div class="uk-width-1-3 uk-card uk-card-body uk-card-default">
+				<h3 class="uk-card-title">Welcome</h3>
+				<p class="uk-margin">Login to get started</p>
+			</div>
+		</div>
+	}
+}
+
+// Home page for authenticated users
+templ SessionedHome(name string) {
+	@layouts.Base() {
+		<div class="uk-flex uk-flex-center uk-flex-middle uk-margin-xlarge-top">
+			<div class="uk-width-1-3 uk-card uk-card-body uk-card-default">
+				<h3 class="uk-card-title">Welcome, { name }</h3>
+				<p class="uk-margin">Enjoy your personalized dashboard!</p>
+			</div>
+		</div>
+	}
+}

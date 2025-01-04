@@ -1,0 +1,105 @@
+package repository
+
+import (
+	"database/sql"
+
+	"user-mgmt/pkg/models"
+
+	"github.com/google/uuid"
+)
+
+func getAllUsers(db *sql.DB) ([]models.User, error) {
+
+	users := []models.User{}
+
+	query := `SELECT id, email, password, name, category, dob, bio, avatar FROM users."Users"`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close() //  to be executed after the surrounding function completes
+
+	for rows.Next() {
+		var user models.User
+		// Scan copies the columns in the current row into the values pointed.
+		err := rows.Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.DOBFormatted, &user.Bio, &user.Avatar)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func GetUserById(db *sql.DB, id string) (models.User, error) {
+
+	var user models.User // zero value of User struct
+
+	err := db.QueryRow(`SELECT id, email, password, name, category, dob, bio, avatar FROM users."Users" WHERE id = ?`, id).Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.Bio, &user.Avatar)
+
+	if err != nil {
+		return user, err
+	}
+
+	user.DOBFormatted = user.DOB.Format("2024-01-02")
+
+	return user, nil
+
+}
+
+func GetUserByEmail(db *sql.DB, email string) (models.User, error) {
+	var user models.User
+
+	err := db.QueryRow(`SELECT id, email, password, name, category, dob, bio, avatar FROM users."Users" WHERE email = $1`, email).Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.Bio, &user.Avatar)
+
+	return user, err
+}
+
+func CreateUser(db *sql.DB, user models.User) error {
+
+	id, err := uuid.NewUUID()
+
+	if err != nil {
+		return err
+	}
+
+	//Convert id to string and set it on the user
+	user.Id = id.String()
+
+	// The Prepare method is used to create a prepared statement.
+	stmt, err := db.Prepare(`INSERT INTO users."Users" (id, email, password, name, category, dob, bio, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, user.Id, user.Email, user.Password, user.Name, user.Category, user.DOB, user.Bio, user.Avatar)
+
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	// Once a statement is prepared, Exec is used to execute it with the actual values specified.
+	_, err = stmt.Exec(user.Id, user.Email, user.Password, user.Name, user.Category, user.DOB, user.Bio, user.Avatar)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateUser(db *sql.DB, id string, user models.User) error {
+	_, err := db.Exec(`UPDATE users."Users" SET name = $1, category = $2, dob = $3, bio = $4 WHERE id = $5`, user.Name, user.Category, user.DOB, user.Bio, id)
+
+	return err
+}
+
+func UpdateUserAvatar(db *sql.DB, userID, filePath string) error {
+	_, err := db.Exec(`UPDATE users."Users" SET avatar = $1 WHERE id = $2`, filePath, userID)
+	return err
+}
+
+func DeleteUser(db *sql.DB, id string) error {
+	_, err := db.Exec(`DELETE FROM users."Users" WHERE id = $1`, id)
+
+	return err
+}
