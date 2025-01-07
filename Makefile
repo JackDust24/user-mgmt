@@ -12,11 +12,12 @@ deps:
 
 css:
 	@echo "Building CSS with Tailwind..."
-	npx tailwindcss -o ./public/css/style.css --minify
+	@npx tailwindcss -i ./public/css/input.css -o ./public/css/style.css --watch &
+	@echo "Finished Building CSS with Tailwind..."
 
 build: deps css
 	@echo "Building Go binary..."
-	go build -o bin/$(APP_NAME) ./cmd/server
+	go build -o bin/$(APP_NAME) ./cmd/server &
 
 # Run the app
 run: build
@@ -27,11 +28,20 @@ init:
 	sh scripts/init.sh
 
 templ:
+	@echo "Templ generate..."
 	@templ generate --watch
+
+air:
+	@echo "Starting air..."
+	@air
 
 # Uses the rules in .air.toml file to run
 server:
+	@echo "Starting server and air..."
 	@air
+
+airdev:
+	@make templ air
 
 dev:
 	@make -j3 css templ server

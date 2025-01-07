@@ -2,12 +2,12 @@ package layouts
 
 import (
 	"user-mgmt/internal/version"
-    "user-mgmt/views/components"
+	"user-mgmt/views/components"
 )
 
 templ Index() {
-   	<!DOCTYPE html>
-    	<html
+	<!DOCTYPE html>
+	<html
 		x-data="{ 
     theme: localStorage.getItem('theme') || 
            (window.matchMedia ? 
@@ -19,7 +19,7 @@ templ Index() {
 		lang="en"
 		x-init="$watch('theme', val => localStorage.setItem('theme', val))"
 	>
-    <head>
+		<head>
 			<title>User Management</title>
 			<link rel="icon" type="image/x-icon" href="/favicon/favicon.ico"/>
 			<meta charset="UTF-8"/>
@@ -35,6 +35,7 @@ templ Index() {
 			<!-- Css -->
 			<link href="/css/base.css" rel="stylesheet"/>
 			<link href="/css/style.css" rel="stylesheet"/>
+			<script src="https://cdn.tailwindcss.com"></script>
 			<!-- Js -->
 			<script src="/js/htmx.min.js"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -48,13 +49,12 @@ templ Index() {
 	</html>
 }
 
-
-
 templ Base() {
-    @Index() {
-        <main class="grow flex flex-col">
+	@Index() {
+		@components.Header()
+		<main class="grow flex flex-col">
 			{ children... }
 		</main>
-        @components.Footer()
-    }
+		@components.Footer()
+	}
 }
