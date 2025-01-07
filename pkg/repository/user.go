@@ -37,7 +37,7 @@ func GetUserById(db *sql.DB, id string) (models.User, error) {
 
 	var user models.User // zero value of User struct
 
-	err := db.QueryRow(`SELECT id, email, password, name, category, dob, bio, avatar FROM users."Users" WHERE id = ?`, id).Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.Bio, &user.Avatar)
+	err := db.QueryRow(`SELECT id, email, password, name, category, dob, bio, avatar FROM users."Users" WHERE id = $1`, id).Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.Bio, &user.Avatar)
 
 	if err != nil {
 		return user, err
@@ -69,8 +69,8 @@ func CreateUser(db *sql.DB, user models.User) error {
 	user.Id = id.String()
 
 	// The Prepare method is used to create a prepared statement.
-	stmt, err := db.Prepare(`INSERT INTO users."Users" (id, email, password, name, category, dob, bio, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, user.Id, user.Email, user.Password, user.Name, user.Category, user.DOB, user.Bio, user.Avatar)
-
+	stmt, err := db.Prepare(`INSERT INTO users."Users" (id, email, password, name, category, dob, bio, avatar) 
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`)
 	if err != nil {
 		return err
 	}

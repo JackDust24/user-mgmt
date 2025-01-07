@@ -15,6 +15,9 @@ import (
 	"user-mgmt/pkg/models"
 	"user-mgmt/pkg/repository"
 
+	"user-mgmt/views/components"
+
+	"github.com/a-h/templ"
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -242,10 +245,37 @@ func LoginPage(db *sql.DB, tmpl *template.Template) http.HandlerFunc {
 	}
 }
 
-func RegisterPage(db *sql.DB, tmpl *template.Template) http.HandlerFunc {
+// func RegisterPage(engine *templ.Engine) http.HandlerFunc {
+//     return func(w http.ResponseWriter, r *http.Request) {
+//         component := home.RegisterPage()
+//         if err := engine.Render(w, component); err != nil {
+//             log.Printf("Error rendering register page: %v", err)
+//             http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+//         }
+//     }
+// }
+
+// func RegisterPage(db *sql.DB, tmpl *template.Template) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+
+// 		tmpl.ExecuteTemplate(w, "register", nil)
+
+// 	}
+// }
+
+func renderComponent(w http.ResponseWriter, r *http.Request, component templ.Component) {
+	err := component.Render(r.Context(), w)
+	if err != nil {
+		log.Println("Unable to render component:", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func RegisterPage(db *sql.DB) http.HandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		tmpl.ExecuteTemplate(w, "register", nil)
+		renderComponent(w, r, components.Register())
 
 	}
 }

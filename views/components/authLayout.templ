@@ -1,0 +1,36 @@
+package components
+
+templ AuthLayout() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>User Management</title>
+			@Libs()
+		</head>
+		<body>
+			<!-- Navigation Bar -->
+			<nav class="bg-gray-800 p-4">
+				<div class="max-w-screen-xl mx-auto flex justify-between items-center">
+					<a class="text-white text-xl font-semibold" href="#">User Management</a>
+					<button class="text-white lg:hidden" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="text-white">☰</span>
+					</button>
+					<div class="lg:flex lg:space-x-6 hidden" id="navbarNav">
+						<ul class="flex space-x-6">
+							<li class="nav-item">
+								<a class="nav-link text-white" href="#">Login</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-white" href="#">About</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</nav>
+			<!-- Dynamic Content -->
+			{ children... }
+		</body>
+	</html>
+}
