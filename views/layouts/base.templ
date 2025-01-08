@@ -2,6 +2,7 @@ package layouts
 
 import (
 	"user-mgmt/internal/version"
+	"user-mgmt/pkg/models"
 	"user-mgmt/views/components"
 )
 
@@ -49,9 +50,9 @@ templ Index() {
 	</html>
 }
 
-templ Base() {
+templ Base(fetcher *models.User) {
 	@Index() {
-		@components.Header()
+		@components.Header(fetcher)
 		<main class="grow flex flex-col">
 			{ children... }
 		</main>

@@ -16,6 +16,7 @@ import (
 	"user-mgmt/pkg/repository"
 
 	"user-mgmt/views/components"
+	"user-mgmt/views/home"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
@@ -23,48 +24,30 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Homepage(db *sql.DB, tmpl *template.Template, store *sessions.CookieStore) http.HandlerFunc {
+func renderComponent(w http.ResponseWriter, r *http.Request, component templ.Component) {
+	err := component.Render(r.Context(), w)
+	if err != nil {
+		log.Println("Unable to render component:", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func Homepage(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		user, _ := CheckLoggedIn(w, r, store, db)
-
-		/* session, err := store.Get(r, "logged-in-user")
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		user, userId := CheckLoggedIn(w, r, store, db)
+		if userId == "" {
+			homepage := home.Index(&user)
+			renderComponent(w, r, homepage)
 			return
 		}
 
-		// Check if the user_id is present in the session
-		userID, ok := session.Values["user_id"]
-		if !ok {
-			//w.Header().Set("HX-Location", "/login")
-			fmt.Println("Redirecting to /login")
-			http.Redirect(w, r, "/login", http.StatusSeeOther) // 303 required for the redirect to happen
+		homepage := home.SessionedHome(&user)
+		renderComponent(w, r, homepage)
 
-			return
-		}
-
-		// Fetch user details from the database
-		user, err := repository.GetUserById(db, userID.(string)) // Ensure that user ID handling is appropriate for your ID data type
-		if err != nil {
-			if err == sql.ErrNoRows {
-				// No user found, possibly handle by clearing the session or redirecting to login
-				session.Options.MaxAge = -1 // Clear the session
-				session.Save(r, w)
-				//w.Header().Set("HX-Location", "/login")
-				fmt.Println("Redirecting to /login")
-				http.Redirect(w, r, "/login", http.StatusSeeOther)
-
-				return
-			}
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		} */
-
-		// User is logged in and found, render the homepage with user data
-		if err := tmpl.ExecuteTemplate(w, "home.html", user); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
+		// if err := tmpl.ExecuteTemplate(w, "home.html", user); err != nil {
+		// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		// }
 	}
 }
 
@@ -79,7 +62,7 @@ func Editpage(db *sql.DB, tmpl *template.Template, store *sessions.CookieStore) 
 	}
 }
 
-func UpdateProfileHandler(db *sql.DB, tmpl *template.Template, store *sessions.CookieStore) http.HandlerFunc {
+func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Retrieve the session
 		currentUserProfile, userID := CheckLoggedIn(w, r, store, db)
@@ -112,7 +95,8 @@ func UpdateProfileHandler(db *sql.DB, tmpl *template.Template, store *sessions.C
 
 		// Handle validation errors
 		if len(errorMessages) > 0 {
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
+
 			return
 		}
 
@@ -128,7 +112,7 @@ func UpdateProfileHandler(db *sql.DB, tmpl *template.Template, store *sessions.C
 		// Call the repository function to update the user
 		if err := repository.UpdateUser(db, userID, user); err != nil {
 			errorMessages = append(errorMessages, "Failed to update user")
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 			log.Fatal(err)
 
 			return
@@ -152,7 +136,7 @@ func AvatarPage(db *sql.DB, tmpl *template.Template, store *sessions.CookieStore
 	}
 }
 
-func UploadAvatarHandler(db *sql.DB, tmpl *template.Template, store *sessions.CookieStore) http.HandlerFunc {
+func UploadAvatarHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -174,7 +158,7 @@ func UploadAvatarHandler(db *sql.DB, tmpl *template.Template, store *sessions.Co
 			}
 
 			if len(errorMessages) > 0 {
-				tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+				components.AuthErrors(errorMessages).Render(r.Context(), w)
 				return
 			}
 
@@ -185,7 +169,7 @@ func UploadAvatarHandler(db *sql.DB, tmpl *template.Template, store *sessions.Co
 		uuid, err := uuid.NewRandom()
 		if err != nil {
 			errorMessages = append(errorMessages, "Error generating unique identifier")
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 
 			return
 		}
@@ -198,14 +182,14 @@ func UploadAvatarHandler(db *sql.DB, tmpl *template.Template, store *sessions.Co
 		dst, err := os.Create(filePath)
 		if err != nil {
 			errorMessages = append(errorMessages, "Error saving the file")
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 
 			return
 		}
 		defer dst.Close()
 		if _, err = io.Copy(dst, file); err != nil {
 			errorMessages = append(errorMessages, "Error saving the file")
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 			return
 		}
 
@@ -213,7 +197,7 @@ func UploadAvatarHandler(db *sql.DB, tmpl *template.Template, store *sessions.Co
 		//userID := r.FormValue("userID") // Assuming you pass the userID somehow
 		if err := repository.UpdateUserAvatar(db, userID, filename); err != nil {
 			errorMessages = append(errorMessages, "Error updating user avatar")
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 
 			log.Fatal(err)
 			return
@@ -237,50 +221,19 @@ func UploadAvatarHandler(db *sql.DB, tmpl *template.Template, store *sessions.Co
 	}
 }
 
-func LoginPage(db *sql.DB, tmpl *template.Template) http.HandlerFunc {
+func LoginPage(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		tmpl.ExecuteTemplate(w, "login", nil)
-
-	}
-}
-
-// func RegisterPage(engine *templ.Engine) http.HandlerFunc {
-//     return func(w http.ResponseWriter, r *http.Request) {
-//         component := home.RegisterPage()
-//         if err := engine.Render(w, component); err != nil {
-//             log.Printf("Error rendering register page: %v", err)
-//             http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-//         }
-//     }
-// }
-
-// func RegisterPage(db *sql.DB, tmpl *template.Template) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-
-// 		tmpl.ExecuteTemplate(w, "register", nil)
-
-// 	}
-// }
-
-func renderComponent(w http.ResponseWriter, r *http.Request, component templ.Component) {
-	err := component.Render(r.Context(), w)
-	if err != nil {
-		log.Println("Unable to render component:", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		renderComponent(w, r, components.Login())
 	}
 }
 
 func RegisterPage(db *sql.DB) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		renderComponent(w, r, components.Register())
-
 	}
 }
 
-func RegisterHandler(db *sql.DB, tmpl *template.Template) http.HandlerFunc {
+func RegisterHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var user models.User
 		var errorMessages []string
@@ -305,29 +258,36 @@ func RegisterHandler(db *sql.DB, tmpl *template.Template) http.HandlerFunc {
 		}
 
 		if len(errorMessages) > 0 {
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			err := components.AuthErrors(errorMessages).Render(r.Context(), w)
+			if err != nil {
+				log.Println("Error rendering error component:", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			}
 			return
 		}
+		log.Println("Check hashedPassword:", user.Password)
 
-		// Hash the password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		log.Println("Check hashedPassword:", hashedPassword)
+
 		if err != nil {
 			errorMessages = append(errorMessages, "Failed to hash password.")
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 			return
 		}
 		user.Password = string(hashedPassword)
+		log.Println("Check user.Password:", user.Password)
 
 		//Set default values
 		user.DOB = time.Date(2001, 1, 1, 0, 0, 0, 0, time.UTC)
 		user.Bio = "Bio goes here"
 		user.Avatar = ""
-
 		// Create user in the database
 		err = repository.CreateUser(db, user)
+
 		if err != nil {
-			errorMessages = append(errorMessages, "Failed to create user: "+err.Error())
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			errorMessages = append(errorMessages, "Failed to create user honest: "+err.Error())
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 			return
 		}
 
@@ -337,7 +297,7 @@ func RegisterHandler(db *sql.DB, tmpl *template.Template) http.HandlerFunc {
 	}
 }
 
-func LoginHandler(db *sql.DB, tmpl *template.Template, store *sessions.CookieStore) http.HandlerFunc {
+func LoginHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		email := r.FormValue("email")
@@ -354,16 +314,18 @@ func LoginHandler(db *sql.DB, tmpl *template.Template, store *sessions.CookieSto
 		}
 
 		if len(errorMessages) > 0 {
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 			return
 		}
 
 		// Retrieve user by email
 		user, err := repository.GetUserByEmail(db, email)
+		log.Println("Retrieve user by email:", err)
+
 		if err != nil {
 			if err == sql.ErrNoRows {
 				errorMessages = append(errorMessages, "Invalid email or password")
-				tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+				components.AuthErrors(errorMessages).Render(r.Context(), w)
 				return
 			}
 
@@ -373,9 +335,12 @@ func LoginHandler(db *sql.DB, tmpl *template.Template, store *sessions.CookieSto
 
 		// Compare the hashed password from the DB with the provided password
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+		log.Println("CompareHashAndPassword:", user.Password)
+		log.Println("CompareHashAndPassword 2:", []byte(password))
+
 		if err != nil {
 			errorMessages = append(errorMessages, "Invalid email or password")
-			tmpl.ExecuteTemplate(w, "autherrors", errorMessages)
+			components.AuthErrors(errorMessages).Render(r.Context(), w)
 
 			return
 		}

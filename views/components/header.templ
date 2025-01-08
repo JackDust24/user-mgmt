@@ -1,47 +1,64 @@
 package components
 
-templ Header() {
+import "user-mgmt/pkg/models"
+
+templ Header(fetcher *models.User) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>User Profile</title>
-			@Libs()
+			// @Libs()
 		</head>
 		<body>
-			// <div class="header-container text-center">
-			//     {{ if (avatar != "") }}
-			//         <img src="uploads/{{ avatar }}" class="profile-image" alt="User Avatar">
-			//     {{ else }}
-			//         <img src="https://via.placeholder.com/150" class="profile-image" alt="User Avatar">
-			//     {{ end }}
-			//     <h1>{{ name }}</h1>
-			//     <p class="lead">
-			//         {{ if (category == 0) }}
-			//             Admin
-			//         {{ else if (category == 1) }}
-			//             Student
-			//         {{ else if (category == 2) }}
-			//             Instructor
-			//         {{ end }}
-			//     </p>
-			// </div>
-			<div class="container mt-5">
-				<div class="row">
-					<div class="col-md-4">
-						<div class="list-group">
-							<a href="/" class="list-group-item list-group-item-action active" aria-current="true">
-								Profile
-							</a>
-							<a href="/edit" class="list-group-item list-group-item-action">Edit Profile</a>
-							<a href="/upload-avatar" class="list-group-item list-group-item-action">Change Avatar</a>
-							<a href="/logout" class="list-group-item list-group-item-action">Logout</a>
+			if fetcher != nil {
+				if user := fetcher; user != nil {
+					<div class="bg-blue-600 text-white py-8 text-center">
+						if user.Avatar != "" {
+							<img src={ "uploads/" + user.Avatar } class="w-36 h-36 object-cover rounded-full border-4 border-white shadow-md inline-block" alt="User Avatar"/>
+						} else {
+							<img src="https://via.placeholder.com/150" class="w-36 h-36 object-cover rounded-full border-4 border-white shadow-md inline-block" alt="User Avatar"/>
+						}
+						<h1>{ user.Name }</h1>
+						<p class="lead">
+							switch user.Category {
+								case 0:
+									{ "Admin" }
+								case 1:
+									{ "Student" }
+								case 2:
+									{ "Instructor" }
+							}
+						</p>
+					</div>
+				}
+				<div class="fixed top-[16rem] left-0 w-full h-[calc(100vh-6rem)] pt-4 pl-1">
+					<div class="row">
+						<div class="w-full md:w-1/4">
+							<div class="bg-white rounded-md shadow">
+								<a href="/" class="block px-4 py-2 text-white bg-blue-600 rounded-t-md font-medium">
+									Profile
+								</a>
+								<a href="/edit" class="block px-4 py-2 text-gray-700 hover:bg-blue-100">
+									Edit Profile
+								</a>
+								<a href="/upload-avatar" class="block px-4 py-2 text-gray-700 hover:bg-blue-100">
+									Change Avatar
+								</a>
+								<a href="/logout" class="block px-4 py-2 text-gray-700 hover:bg-blue-100 rounded-b-md">
+									Logout
+								</a>
+							</div>
+						</div>
+						<div class="col-md-8">
+							{ children... }
 						</div>
 					</div>
-					<div class="col-md-8"></div>
 				</div>
-			</div>
+			} else {
+				<div class="alert alert-danger">Error loading user data</div>
+			}
 		</body>
 	</html>
 }

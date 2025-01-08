@@ -1,0 +1,11 @@
+package components
+
+templ AuthErrors(errors []string) {
+	if len(errors) > 0 {
+		<div class="alert alert-danger">
+			for _, err := range errors {
+				<div>{ err }</div>
+			}
+		</div>
+	}
+}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"log"
 
 	"user-mgmt/pkg/models"
 
@@ -12,7 +13,7 @@ func getAllUsers(db *sql.DB) ([]models.User, error) {
 
 	users := []models.User{}
 
-	query := `SELECT id, email, password, name, category, dob, bio, avatar FROM users."Users"`
+	query := `SELECT id, email, password, name, category, dob, bio, avatar FROM public."users"`
 
 	rows, err := db.Query(query)
 	if err != nil {
@@ -37,7 +38,7 @@ func GetUserById(db *sql.DB, id string) (models.User, error) {
 
 	var user models.User // zero value of User struct
 
-	err := db.QueryRow(`SELECT id, email, password, name, category, dob, bio, avatar FROM users."Users" WHERE id = $1`, id).Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.Bio, &user.Avatar)
+	err := db.QueryRow(`SELECT id, email, password, name, category, dob, bio, avatar FROM public."users" WHERE id = $1`, id).Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.Bio, &user.Avatar)
 
 	if err != nil {
 		return user, err
@@ -52,12 +53,14 @@ func GetUserById(db *sql.DB, id string) (models.User, error) {
 func GetUserByEmail(db *sql.DB, email string) (models.User, error) {
 	var user models.User
 
-	err := db.QueryRow(`SELECT id, email, password, name, category, dob, bio, avatar FROM users."Users" WHERE email = $1`, email).Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.Bio, &user.Avatar)
+	err := db.QueryRow(`SELECT id, email, password, name, category, dob, bio, avatar FROM public."users" WHERE email = $1`, email).Scan(&user.Id, &user.Email, &user.Password, &user.Name, &user.Category, &user.DOB, &user.Bio, &user.Avatar)
 
 	return user, err
 }
 
 func CreateUser(db *sql.DB, user models.User) error {
+
+	log.Println("Check DB:", db)
 
 	id, err := uuid.NewUUID()
 
@@ -69,9 +72,11 @@ func CreateUser(db *sql.DB, user models.User) error {
 	user.Id = id.String()
 
 	// The Prepare method is used to create a prepared statement.
-	stmt, err := db.Prepare(`INSERT INTO users."Users" (id, email, password, name, category, dob, bio, avatar) 
+	stmt, err := db.Prepare(`INSERT INTO public."users" (id, email, password, name, category, dob, bio, avatar) 
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`)
 	if err != nil {
+		log.Println("Check Error:", err)
+
 		return err
 	}
 
@@ -88,18 +93,18 @@ func CreateUser(db *sql.DB, user models.User) error {
 }
 
 func UpdateUser(db *sql.DB, id string, user models.User) error {
-	_, err := db.Exec(`UPDATE users."Users" SET name = $1, category = $2, dob = $3, bio = $4 WHERE id = $5`, user.Name, user.Category, user.DOB, user.Bio, id)
+	_, err := db.Exec(`UPDATE public."users" SET name = $1, category = $2, dob = $3, bio = $4 WHERE id = $5`, user.Name, user.Category, user.DOB, user.Bio, id)
 
 	return err
 }
 
 func UpdateUserAvatar(db *sql.DB, userID, filePath string) error {
-	_, err := db.Exec(`UPDATE users."Users" SET avatar = $1 WHERE id = $2`, filePath, userID)
+	_, err := db.Exec(`UPDATE public."users" SET avatar = $1 WHERE id = $2`, filePath, userID)
 	return err
 }
 
 func DeleteUser(db *sql.DB, id string) error {
-	_, err := db.Exec(`DELETE FROM users."Users" WHERE id = $1`, id)
+	_, err := db.Exec(`DELETE FROM public."users" WHERE id = $1`, id)
 
 	return err
 }
