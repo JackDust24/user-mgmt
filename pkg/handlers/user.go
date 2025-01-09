@@ -279,10 +279,8 @@ func RegisterHandler(db *sql.DB) http.HandlerFunc {
 			}
 			return
 		}
-		log.Println("Check hashedPassword:", user.Password)
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-		log.Println("Check hashedPassword:", hashedPassword)
 
 		if err != nil {
 			errorMessages = append(errorMessages, "Failed to hash password.")
@@ -290,7 +288,6 @@ func RegisterHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		user.Password = string(hashedPassword)
-		log.Println("Check user.Password:", user.Password)
 
 		//Set default values
 		user.DOB = time.Date(2001, 1, 1, 0, 0, 0, 0, time.UTC)

@@ -36,6 +36,7 @@ templ Header(fetcher *models.User) {
 				<div class="fixed top-[16rem] left-0 w-1/4 h-[calc(100vh-6rem)] pt-4 pl-1">
 					<div class="row">
 						<div class="w-full">
+						if user := fetcher; user != nil {
 							<div class="bg-white rounded-md shadow">
 								<a href="/" class="block px-4 py-2 text-white bg-blue-600 rounded-t-md font-medium">
 									Profile
@@ -46,14 +47,18 @@ templ Header(fetcher *models.User) {
 								<a href="/upload-avatar" class="block px-4 py-2 text-gray-700 hover:bg-blue-100">
 									Change Avatar
 								</a>
-								<a href="/logout" class="block px-4 py-2 text-gray-700 hover:bg-blue-100 rounded-b-md">
+								if user.Email != "" {
+									<a href="/logout" class="block px-4 py-2 text-gray-700 hover:bg-blue-100 rounded-b-md">
 									Logout
-								</a>
+									</a>
+								} else {
+									<a href="/login" class="block px-4 py-2 text-gray-700 hover:bg-blue-100 rounded-b-md">
+									Login
+									</a>
+								}
 							</div>
+						}
 						</div>
-						// <div class="col-md-8">
-						// 	{ children... }
-						// </div>
 					</div>
 				</div>
 			} else {

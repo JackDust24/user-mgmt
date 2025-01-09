@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"user-mgmt/pkg/models"
@@ -46,10 +45,6 @@ func GetUserById(db *sql.DB, id string) (models.User, error) {
 	}
 
 	user.DOBFormatted = user.DOB.Format("2006-01-02")
-	fmt.Println("Check DOB not  DOBFormatted:", user.DOB)
-	fmt.Println("Check DOB try  DOBFormatted:", user.DOB.Format("2006-01-02"))
-
-	fmt.Println("Check DOBFormatted:", user.DOBFormatted)
 
 	return user, nil
 
@@ -64,8 +59,6 @@ func GetUserByEmail(db *sql.DB, email string) (models.User, error) {
 }
 
 func CreateUser(db *sql.DB, user models.User) error {
-
-	log.Println("Check DB:", db)
 
 	id, err := uuid.NewUUID()
 
