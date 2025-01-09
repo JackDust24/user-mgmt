@@ -94,7 +94,7 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 
 		log.Printf("Check bio:", bio)
 		log.Printf("Check name:", name)
-		log.Printf("Check dobStr: 2", dobStr)
+		log.Printf("Check dobStr: 1", dobStr)
 
 		if name == "" {
 			errorMessages = append(errorMessages, "Name is required.")
@@ -105,6 +105,10 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 		}
 
 		dob, err := time.Parse("2006-01-02", dobStr)
+		log.Printf("Check dobStr 1:", dob.Format("2006-01-02"))
+		log.Printf("Check dobStr 2:", dob)
+		log.Printf("Check dobStr 3:", dobStr)
+
 		if err != nil {
 			errorMessages = append(errorMessages, "Invalid date format.")
 		}
@@ -118,11 +122,12 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 
 		// Create user struct
 		user := models.User{
-			Id:       userID,
-			Name:     name,
-			DOB:      dob,
-			Bio:      bio,
-			Category: currentUserProfile.Category,
+			Id:           userID,
+			Name:         name,
+			DOB:          dob,
+			Bio:          bio,
+			Category:     currentUserProfile.Category,
+			DOBFormatted: dobStr,
 		}
 
 		// Call the repository function to update the user
@@ -138,10 +143,11 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 		// Set HX-Location header and return 204 No Content status
 		// w.Header().Set("HX-Location", "/")
 		log.Printf("Check redirext")
+		w.Header().Set("HX-Location", "/")
 
-		w.Header().Set("HX-Location", `/; path=/; method=GET`)
 		w.WriteHeader(http.StatusNoContent)
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		// w.Header().Set("HX-Location", `/; path=/; method=GET`)
+		// http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
@@ -236,7 +242,7 @@ func UploadAvatarHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFu
 		}
 
 		//Navigate to the profile page after the update
-		w.Header().Set("HX-Location", "/static/")
+		w.Header().Set("HX-Location", "/")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -378,7 +384,7 @@ func LoginHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 		}
 
 		// Set HX-Location header and return 204 No Content status
-		w.Header().Set("HX-Location", "/static/")
+		w.Header().Set("HX-Location", "/")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

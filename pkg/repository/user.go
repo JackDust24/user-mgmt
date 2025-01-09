@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"user-mgmt/pkg/models"
@@ -44,7 +45,11 @@ func GetUserById(db *sql.DB, id string) (models.User, error) {
 		return user, err
 	}
 
-	user.DOBFormatted = user.DOB.Format("2024-01-02")
+	user.DOBFormatted = user.DOB.Format("2006-01-02")
+	fmt.Println("Check DOB not  DOBFormatted:", user.DOB)
+	fmt.Println("Check DOB try  DOBFormatted:", user.DOB.Format("2006-01-02"))
+
+	fmt.Println("Check DOBFormatted:", user.DOBFormatted)
 
 	return user, nil
 

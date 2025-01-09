@@ -7,7 +7,7 @@ import (
 
 templ Index(user *models.User) {
 	@layouts.Base(user) {
-	<div class="flex items-center justify-center min-h-screen bg-gray-100">
+	<div hx-boost="true" hx-push-url="true" class="flex items-center justify-center min-h-screen bg-gray-100">
 		<div class="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
 			<h4 class="text-2xl font-semibold text-center mb-6">Edit Profile</h4>
 			<form id="editProfileForm" novalidate action="/edit" method="POST" >
@@ -67,22 +67,3 @@ templ Index(user *models.User) {
 
 	}
 }
-
-// // <!-- <p><strong>Email Address:</strong> {{ .Email }}</p>
-
-// //     <p><strong>Date of Birth:</strong> {{or .DOBFormatted "N/A"}}</p>
-// //     <p><strong>Bio:</strong> {{ .Bio }}</p>
-// //     <p><strong>Role:</strong>
-
-// //         {{if eq .Category 0}}
-// //         <i class="fas fa-user-tie"></i>
-// //         Admin
-// //         {{else if eq .Category 1}}
-// //         <i class="fas fa-user-graduate"></i>
-// //         Student
-// //         {{else if eq .Category 2}}
-// //         <i class="fa-solid fa-person-chalkboard"></i>
-// //         Instructor
-
-// //         {{end}}
-// //     </p> -->
