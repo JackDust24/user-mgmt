@@ -1,0 +1,44 @@
+package avatar
+
+import (
+	"user-mgmt/pkg/models"
+	"user-mgmt/views/layouts"
+)
+
+templ Index(user *models.User) {
+	@layouts.Base(user) {
+	<div hx-boost="true" hx-push-url="true" class="flex items-center justify-center min-h-screen bg-gray-100">
+		<div class="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
+			<h4 class="text-2xl font-semibold text-center mb-6">Upload Avatar Image</h4>
+			<form novalidate action="/upload-avatar" method="POST" >
+				<!-- Errors Section -->
+				<div id="errors" class="mb-4"></div>
+
+				<!-- Date of Birth Field -->
+				<div class="mb-4">
+					<label for="dob" class="block text-gray-700 font-medium mb-2">Select Avatar Image</label>
+					<input 
+						type="file" 
+						id="avatarInput" 
+						name="avatar" 
+						required
+						class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+					/>
+				</div>
+
+				<!-- Upload Button -->
+				<button 
+                    hx-post="/upload-avatar" 
+                    hx-encoding="multipart/form-data" 
+                    hx-target="#errors" 
+                    type="submit" 
+					class="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+				>
+					Upload Avatar
+				</button>
+			</form>
+		</div>
+	</div>
+
+	}
+}

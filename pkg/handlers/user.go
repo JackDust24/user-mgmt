@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -15,6 +14,7 @@ import (
 	"user-mgmt/pkg/models"
 	"user-mgmt/pkg/repository"
 
+	"user-mgmt/views/avatar"
 	"user-mgmt/views/components"
 	"user-mgmt/views/editProfile"
 	"user-mgmt/views/home"
@@ -55,7 +55,6 @@ func Homepage(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 func Editpage(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Check Editpage:", store)
 
 		user, userId := CheckLoggedIn(w, r, store, db)
 		if userId == "" {
@@ -70,14 +69,10 @@ func Editpage(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 }
 
 func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
-	log.Printf("Check UpdateProfileHandler:", store)
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Check UpdateProfileHandler: 2", store)
 
 		// Retrieve the session
 		currentUserProfile, userID := CheckLoggedIn(w, r, store, db)
-
-		log.Printf("Check currentUserProfile:", currentUserProfile)
 
 		// Parse the form
 		if err := r.ParseForm(); err != nil {
@@ -92,10 +87,6 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 		bio := r.FormValue("bio")
 		dobStr := r.FormValue("dob")
 
-		log.Printf("Check bio:", bio)
-		log.Printf("Check name:", name)
-		log.Printf("Check dobStr: 1", dobStr)
-
 		if name == "" {
 			errorMessages = append(errorMessages, "Name is required.")
 		}
@@ -105,9 +96,6 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 		}
 
 		dob, err := time.Parse("2006-01-02", dobStr)
-		log.Printf("Check dobStr 1:", dob.Format("2006-01-02"))
-		log.Printf("Check dobStr 2:", dob)
-		log.Printf("Check dobStr 3:", dobStr)
 
 		if err != nil {
 			errorMessages = append(errorMessages, "Invalid date format.")
@@ -141,24 +129,24 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 
 		// Redirect or return success
 		// Set HX-Location header and return 204 No Content status
-		// w.Header().Set("HX-Location", "/")
-		log.Printf("Check redirext")
 		w.Header().Set("HX-Location", "/")
-
 		w.WriteHeader(http.StatusNoContent)
-		// w.Header().Set("HX-Location", `/; path=/; method=GET`)
-		// http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
-func AvatarPage(db *sql.DB, tmpl *template.Template, store *sessions.CookieStore) http.HandlerFunc {
+func AvatarPage(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		user, _ := CheckLoggedIn(w, r, store, db)
-
-		if err := tmpl.ExecuteTemplate(w, "uploadAvatar", user); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		user, userId := CheckLoggedIn(w, r, store, db)
+		if userId == "" {
+			homepage := home.Index(&user)
+			renderComponent(w, r, homepage)
+			return
 		}
+
+		avatarPage := avatar.Index(&user)
+		renderComponent(w, r, avatarPage)
+
 	}
 }
 
