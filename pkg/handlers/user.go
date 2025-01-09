@@ -35,20 +35,21 @@ func renderComponent(w http.ResponseWriter, r *http.Request, component templ.Com
 
 func Homepage(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Homepage handler")
 
 		user, userId := CheckLoggedIn(w, r, store, db)
 		if userId == "" {
+			fmt.Println("Homepage Index")
+
 			homepage := home.Index(&user)
 			renderComponent(w, r, homepage)
 			return
 		}
+		fmt.Println("Homepage Session")
 
 		homepage := home.SessionedHome(&user)
 		renderComponent(w, r, homepage)
 
-		// if err := tmpl.ExecuteTemplate(w, "home.html", user); err != nil {
-		// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		// }
 	}
 }
 
@@ -331,7 +332,6 @@ func LoginHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 
 		// Retrieve user by email
 		user, err := repository.GetUserByEmail(db, email)
-		log.Println("Retrieve user by email:", err)
 
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -346,8 +346,6 @@ func LoginHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 
 		// Compare the hashed password from the DB with the provided password
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-		log.Println("CompareHashAndPassword:", user.Password)
-		log.Println("CompareHashAndPassword 2:", []byte(password))
 
 		if err != nil {
 			errorMessages = append(errorMessages, "Invalid email or password")
@@ -369,7 +367,9 @@ func LoginHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 		}
 
 		// Set HX-Location header and return 204 No Content status
-		w.Header().Set("HX-Location", "/")
+		log.Println("Retrieve user by user.Id:", user.Id)
+		// w.Header().Set("HX-Location", "/")
+		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

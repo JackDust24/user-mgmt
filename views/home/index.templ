@@ -11,7 +11,7 @@ templ Index(user *models.User) {
 		<div class="uk-flex uk-flex-center uk-flex-middle uk-margin-xlarge-top">
 			<div class="uk-width-1-3 uk-card uk-card-body uk-card-default">
 				<h3 class="uk-card-title text-blue-600">Welcome</h3>
-				<p class="uk-margin">Login to get started</p>
+				<p class="uk-margin">Register or Login to get started</p>
 			</div>
 		</div>
 	}
@@ -20,7 +20,7 @@ templ Index(user *models.User) {
 // Home page for authenticated users
 templ SessionedHome(user *models.User) {
 	@layouts.Base(user) {
-		<div class="uk-flex uk-flex-center uk-flex-middle uk-margin-xlarge-top">
+		<div hx-boost="true" hx-push-url="true" class="uk-flex uk-flex-center uk-flex-middle uk-margin-xlarge-top">
 			<div class="uk-width-1-3 uk-card uk-card-body uk-card-default">
 				<h3 class="uk-card-title text-blue-600">Welcome, { user.Name }</h3>
 				<p class="uk-margin">Enjoy your personalized dashboard!</p>
