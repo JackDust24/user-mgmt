@@ -1,0 +1,88 @@
+package editProfile
+
+import (
+	"user-mgmt/pkg/models"
+	"user-mgmt/views/layouts"
+)
+
+templ Index(user *models.User) {
+	@layouts.Base(user) {
+	<div class="flex items-center justify-center min-h-screen bg-gray-100">
+		<div class="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
+			<h4 class="text-2xl font-semibold text-center mb-6">Edit Profile</h4>
+			<form id="editProfileForm" novalidate action="/edit" method="POST" >
+				<!-- Errors Section -->
+				<div id="errors" class="mb-4"></div>
+
+				<!-- Name Field -->
+				<div class="mb-4">
+					<label for="name" class="block text-gray-700 font-medium mb-2">Name</label>
+					<input 
+						value={ user.Name }
+						type="text" 
+						id="name" 
+						name="name" 
+						required 
+						placeholder="Enter your name"
+						class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+					/>
+				</div>
+
+				<!-- Date of Birth Field -->
+				<div class="mb-4">
+					<label for="dob" class="block text-gray-700 font-medium mb-2">Date of Birth</label>
+					<input 
+						value={ user.DOBFormatted }
+						type="date" 
+						id="dob" 
+						name="dob" 
+						required
+						class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+					/>
+				</div>
+
+				<!-- Bio Field -->
+				<div class="mb-4">
+					<label for="bio" class="block text-gray-700 font-medium mb-2">Bio</label>
+					<textarea 
+						id="bio" 
+						name="bio" 
+						placeholder="Tell us something about yourself"
+						class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+					>{ user.Bio }</textarea>
+				</div>
+
+				<!-- Submit Button -->
+				<button 
+					hx-post="/edit" 
+					hx-target="#errors" 
+					type="submit"
+					class="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+				>
+					Save Changes
+				</button>
+			</form>
+		</div>
+	</div>
+
+	}
+}
+
+// // <!-- <p><strong>Email Address:</strong> {{ .Email }}</p>
+
+// //     <p><strong>Date of Birth:</strong> {{or .DOBFormatted "N/A"}}</p>
+// //     <p><strong>Bio:</strong> {{ .Bio }}</p>
+// //     <p><strong>Role:</strong>
+
+// //         {{if eq .Category 0}}
+// //         <i class="fas fa-user-tie"></i>
+// //         Admin
+// //         {{else if eq .Category 1}}
+// //         <i class="fas fa-user-graduate"></i>
+// //         Student
+// //         {{else if eq .Category 2}}
+// //         <i class="fa-solid fa-person-chalkboard"></i>
+// //         Instructor
+
+// //         {{end}}
+// //     </p> -->

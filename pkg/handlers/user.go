@@ -16,6 +16,7 @@ import (
 	"user-mgmt/pkg/repository"
 
 	"user-mgmt/views/components"
+	"user-mgmt/views/editProfile"
 	"user-mgmt/views/home"
 
 	"github.com/a-h/templ"
@@ -51,21 +52,32 @@ func Homepage(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 	}
 }
 
-func Editpage(db *sql.DB, tmpl *template.Template, store *sessions.CookieStore) http.HandlerFunc {
+func Editpage(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Check Editpage:", store)
 
-		user, _ := CheckLoggedIn(w, r, store, db)
-
-		if err := tmpl.ExecuteTemplate(w, "editProfile", user); err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		user, userId := CheckLoggedIn(w, r, store, db)
+		if userId == "" {
+			homepage := home.Index(&user)
+			renderComponent(w, r, homepage)
+			return
 		}
+
+		editPage := editProfile.Index(&user)
+		renderComponent(w, r, editPage)
 	}
 }
 
 func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
+	log.Printf("Check UpdateProfileHandler:", store)
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Check UpdateProfileHandler: 2", store)
+
 		// Retrieve the session
 		currentUserProfile, userID := CheckLoggedIn(w, r, store, db)
+
+		log.Printf("Check currentUserProfile:", currentUserProfile)
 
 		// Parse the form
 		if err := r.ParseForm(); err != nil {
@@ -79,6 +91,10 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 		name := r.FormValue("name")
 		bio := r.FormValue("bio")
 		dobStr := r.FormValue("dob")
+
+		log.Printf("Check bio:", bio)
+		log.Printf("Check name:", name)
+		log.Printf("Check dobStr: 2", dobStr)
 
 		if name == "" {
 			errorMessages = append(errorMessages, "Name is required.")
@@ -120,8 +136,12 @@ func UpdateProfileHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerF
 
 		// Redirect or return success
 		// Set HX-Location header and return 204 No Content status
-		w.Header().Set("HX-Location", "/")
+		// w.Header().Set("HX-Location", "/")
+		log.Printf("Check redirext")
+
+		w.Header().Set("HX-Location", `/; path=/; method=GET`)
 		w.WriteHeader(http.StatusNoContent)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
@@ -216,7 +236,7 @@ func UploadAvatarHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFu
 		}
 
 		//Navigate to the profile page after the update
-		w.Header().Set("HX-Location", "/")
+		w.Header().Set("HX-Location", "/static/")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -358,7 +378,7 @@ func LoginHandler(db *sql.DB, store *sessions.CookieStore) http.HandlerFunc {
 		}
 
 		// Set HX-Location header and return 204 No Content status
-		w.Header().Set("HX-Location", "/")
+		w.Header().Set("HX-Location", "/static/")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -403,7 +423,7 @@ func CheckLoggedIn(w http.ResponseWriter, r *http.Request, store *sessions.Cooki
 	if !ok {
 		//w.Header().Set("HX-Location", "/login")
 		fmt.Println("Redirecting to /login")
-		http.Redirect(w, r, "/login", http.StatusSeeOther) // 303 required for the redirect to happen
+		// http.Redirect(w, r, "/login", http.StatusSeeOther) // 303 required for the redirect to happen
 		/* w.Header().Set("HX-Location", "/login")
 		w.WriteHeader(http.StatusNoContent) */
 		return models.User{}, ""
